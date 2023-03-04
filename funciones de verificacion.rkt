@@ -60,3 +60,15 @@
 (define (transpuesta matriz)
   (cond(( null? (car matriz)) '())
        (else( cons( aplicar-f car matriz) (transpuesta (aplicar-f cdr matriz))))))
+
+; pedir al usuario las dimensiones de la matriz
+(display "Ingrese el número de filas: ")
+(define filas (read))
+(display "Ingrese el número de columnas: ")
+(define columnas (read))
+
+; generar la matriz y mostrarla en pantalla
+(define matriz (GenerarMatriz filas columnas))
+(cond ((not matriz) (display "Las dimensiones de la matriz son incorrectas"))
+      (else (displayln "La matriz generada es:")
+            (for-each displayln matriz)))
