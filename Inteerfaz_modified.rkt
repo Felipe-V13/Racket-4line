@@ -1,9 +1,11 @@
 #lang racket/base
 
 (require racket/gui)
+
 (require racket/include)
 
 (require (prefix-in htdp: 2htdp/image))
+
 
 (require "Logica.rkt")
 
@@ -71,6 +73,8 @@
 (define info-msg (new message% [parent info-frame] [label "Este es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto."]))
 
 
+
+
 ; Botón para salir del menu rapido
 (new button% [parent info-frame]
              [label "Salir"]
@@ -79,7 +83,13 @@
                          (send frame show #t))])
 
 
-                         ; Botón para crear el tablero e iniciar el juego
+
+
+
+
+
+; Botón para crear el tablero e iniciar el juego
+; Botón para crear el tablero e iniciar el juego
 (new button% [parent frame]
              [label "Iniciar"]
              ; Callback procedure for a button click:
@@ -88,13 +98,24 @@
                   [(< (send columnas_TF get-value) 8) (new message% [parent frame][label "La cantidad de columnas debe ser mínimo 8"])]
                   [(< (send filas_TF get-value) 8)  (new message%[parent frame][label "La cantidad de filas debe ser mínimo 8"])]
                   [(> (send filas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de filas debe ser máximo 16"])]
+                  [(> (send columnas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de columnas debe ser máximo 16"])]
                   ((and (not (false? (generateMatrx (send columnas_TF get-value) (send filas_TF get-value)))) (not gameStart))
+                   ; Preguntar al usuario qué color desea
+                   (define dialog (new message-box% [parent frame]
+                                                    [label "Elija el color deseado:"]
+                                                    [choices '("Plata" "Cobre" "Rosa")]))
+                   (define respuesta (send dialog show))
+                   ; Según la respuesta del usuario, asignar la imagen correspondiente
+                   (define imagen (cond [(equal? respuesta "Plata") "plata1.jpg"]
+                                         [(equal? respuesta "Cobre") "cobre.jpg"]
+                                         [(equal? respuesta "Rosa") "rosa.jpg"]))
                    (crear_botones_columnas (send columnas_TF get-value) 0)
                    (asignar_matriz (generateMatrx (send filas_TF get-value) (send columnas_TF get-value)))
                    (crear_matriz_interfaz (car matrix))
                    (asignar_gameStart #t))
                   (else
                    (writeln #f))))])
+
 
 ;Definir el área de los botones de interfaz
 (define panel_botones(new horizontal-panel%	 
@@ -182,19 +203,17 @@
 ; Hace el espacio que representa fichas dependiendo del numero que toque (0 es vacío, 1 es ficha jugador, 2 ficha máquina)
 
 (define (crear_espacio num panelx)
-  (if(= num 0)
-     (new message% [parent panelx]
-            [label (read-bitmap "plata1.jpg" )])
-     #f)
-  (if(= num 1)
-     (new message% [parent panelx]
-            [label (read-bitmap "cobre.jpg" )])
-     #f)
-  (if(= num 2)
-     (new message% [parent panelx]
-            [label (read-bitmap "rosa.jpg" )])
-     #f))
-  
+  (let ([imagen ""])
+    (cond
+      [(= num 0)
+       (new message% [parent panelx]
+            [label (read-bitmap "plata1.jpg" )])]
+      [(= num 1)
+       (new message% [parent panelx]
+            [label (read-bitmap (imagen))])]
+      [(= num 2)
+       (new message% [parent panelx]
+            [label (read-bitmap "rosa.jpg" )])])))
 
   
 
