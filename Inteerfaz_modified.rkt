@@ -65,7 +65,6 @@
                     (max-value 4)
                     (init-value 2)))
 
-
 (define (actualizar_imagen)
         (cond [(= (send color_SL get-value) 1) "azul.jpg"]
               [(= (send color_SL get-value) 2) "rojo.jpg"]
@@ -100,10 +99,6 @@
 ;
 
 
-
-
-
-
 ; Botón para crear el tablero e iniciar el juego
 ; Botón para crear el tablero e iniciar el juego
 (new button% [parent frame]
@@ -115,99 +110,67 @@
                   [(< (send filas_TF get-value) 8)  (new message%[parent frame][label "La cantidad de filas debe ser mínimo 8"])]
                   [(> (send filas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de filas debe ser máximo 16"])]
                   [(> (send columnas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de columnas debe ser máximo 16"])]
-                  ((and (not (false? (generateMatrx (send columnas_TF get-value) (send filas_TF get-value)))) (not gameStart))
+                  ((and (not (false? (generarMatriz (send columnas_TF get-value) (send filas_TF get-value)))) (not gameStart))
                    ; Preguntar al usuario qué color desea
                    
                    (crear_botones_columnas (send columnas_TF get-value) 0)
-                   (asignar_matriz (generateMatrx (send filas_TF get-value) (send columnas_TF get-value)))
+                   (asignar_matriz (generarMatriz (send filas_TF get-value) (send columnas_TF get-value)))
                    (crear_matriz_interfaz (car matrix))
                    (asignar_gameStart #t))
                   (else
                    (writeln #f))))])
 
-
 ;Definir el área de los botones de interfaz
 (define panel_botones(new horizontal-panel%	 
    	 	[parent frame]	 
                 [style '(border)]
-                [alignment '(left top)]
-   	 ))
-
+                [alignment '(left top)]))
 
 ;Definir el área de juego de interfaz
 (define panel(new vertical-panel%	 
    	 	[parent frame]	 
                 [style '(border)]
-                [alignment '(left top)]
-   	 ))
-
-
-
+                [alignment '(left top)]))
 
 ;Dialog box cuando el jugador gana
 (define wonWindow (new dialog% [label "Ganaste"]
                        [parent frame]
-                       [width 300]	 
+                       [width 300]))
 
-       )
-)
-
-; Función para mostrar la ventana que ganó
 (define (showWonWindow)
-  
-   (send wonWindow show #t)
-  
- )
+   (send wonWindow show #t))
 
-;Dialog box cuando el jugador gana
+;Dialog box cuando el jugador pierde
 (define lossWindow (new dialog% [label "Perdiste"]
                        [parent frame]
-                       [width 300]	 
+                       [width 300]))
 
-       )
-)
-
-; Función para mostrar la ventana que ganó
 (define (showLossWindow)
-  
-   (send lossWindow show #t)
-  
- )
+   (send lossWindow show #t))
 
-;Dialog box cuando el jugador gana
+;Dialog box cuando hay un empate
 (define tieWindow (new dialog% [label "Empate"]
                        [parent frame]
-                       [width 300]	 
+                       [width 300]))
 
-       )
-)
-
-; Función para mostrar la ventana que ganó
 (define (showTieWindow)
-  
-   (send tieWindow show #t)
-  
- )
+   (send tieWindow show #t))
 
-;Funcion que realiza la conexion con el algoritmo codicioso. Retorna un numero de columna donde colocar la ficha
-(define(colPC)
-  (cadr (greedybegin (reverse (car matrix)) (length (car matrix)) (length (caar matrix)) 0 0)))
+;Funcion que retorna la solucion para la siguiente jugada de la PC
+(define(solucion)
+  (objetivo (reverse (car matrix)) (length (caar matrix)) 0))
    
 
-;Funcion que usa el retorno de colPC para mostrar la jugada de la PC
+;Funcion que usa el retorno de solucion para mostrar la jugada de la PC
 (define(playPC)
   (cond
-    ((equal? (play 2 (colPC) (car matrix)) 1) (showWonWindow))
-    ((equal? (play 2 (colPC) (car matrix)) 2) (showLossWindow))
-    ((equal? (play 2 (colPC) (car matrix)) 0) (showTieWindow))
+    ((equal? (jugada 2 (solucion) (car matrix)) 1) (showWonWindow))
+    ((equal? (jugada 2 (solucion) (car matrix)) 2) (showLossWindow))
+    ((equal? (jugada 2 (solucion) (car matrix)) 0) (showTieWindow))
     (else
-     (printf "turno pc\n")
-     (writeln (play 2 (colPC) (car matrix)))
-     (define candidatos (candi  matrix))
-     (asignar_matriz (play 2 (colPC) (car matrix)))
+     (asignar_matriz (jugada 2 (solucion) (car matrix)))
      (refrescar_tablero)
-     (crear_matriz_interfaz (car matrix))
-)))
+     (crear_matriz_interfaz (car matrix)))))
 
 ; Hace el espacio que representa fichas dependiendo del numero que toque (0 es vacío, 1 es ficha jugador, 2 ficha máquina)
 
@@ -220,8 +183,6 @@
                 [label (read-bitmap imagen_eleccion)])]
           [(= num 2)           (new message% [parent panelx]
                 [label (read-bitmap "rosa (1).jpg" )])])))
-
-
 
 ;Crea un widget que representa una fila de la matriz en la interfaz
 (define (crear_fila_mat_widget)
@@ -268,11 +229,7 @@
      (set! panel (new vertical-panel%	 
    	 	[parent frame]	 
                 [style '(border)]
-                [alignment '(left top)]
-   	 )
-
-     )
-)
+                [alignment '(left top)])))
 
 ; ||============= Funciones que afectan la interfaz  ==========||
 
@@ -283,18 +240,13 @@
              [horiz-margin 1]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
-                         (printf "turno jug\n")
-                         (writeln (play 1 col (car matrix)))
                          (cond
-                           ;Si la función jugar devuelve un string es que el jugador ya ganó
-                           ((equal? (play 1 col (car matrix)) 1) (showWonWindow))
-                           ;;((equal? (play 1 col (car matrix)) 2) (showLossWindow))
-                           ((equal? (play 1 col (car matrix)) 0) (showTieWindow))
-                           ((equal? (play 1 col (car matrix)) (car matrix)) (send button enable #f))
+                           ;Si la función jugada devuelve un final del juego
+                           ((equal? (jugada 1 col (car matrix)) 1) (showWonWindow))
+                           ((equal? (jugada 1 col (car matrix)) 0) (showTieWindow))
+                           ((equal? (jugada 1 col (car matrix)) (car matrix)) (send button enable #f))
                            (else
-                            (asignar_matriz (play 1 col (car matrix)))
-                            (refrescar_tablero)
-                            (crear_matriz_interfaz (car matrix))
+                            (asignar_matriz (jugada 1 col (car matrix)))
                             (playPC)
                             )))]))
          
