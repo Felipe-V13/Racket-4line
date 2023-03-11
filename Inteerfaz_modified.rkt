@@ -6,34 +6,33 @@
 
 (require (prefix-in htdp: 2htdp/image))
 
-
 (require "Logica.rkt")
 
 
-; ||============= Variables necesarias para el juego y sus respectivos set! ==========||
+; #INICIALIZACION DEL JUEGO#
 
+;se inicializa la variable con false
 
-;Condición de que el juego comenzó
 (define gameStart #f)
 
-; Función que dice si el juego comenzó o no
+;ciclo que se encarga de actualizar el valor de gameStart
 
 (define (asignar_gameStart bool)
     (set! gameStart (cons bool gameStart)))
 
-; Matriz del juego actual
+;se define la matrix como null
 (define matrix null)
 
-; Función que asigna la matriz del juego en el momento
+;actualiza el valor de matrix
 (define (asignar_matriz matriz)
     (set! matrix (cons matriz matrix)))
 
-; ||============= Creación de widwets interfaz  ==========||
+; #MENU PRINCIPAL DEL JUEGO#
 
 
-; Widget frame que represente la ventana
+; Caracteristicas de la ventana principal
 (define frame (new frame%
-                   [label "4 en Línea"]
+                   [label "Racket 4 en Linea [Noel, Jose, Felipe]"]
                    [width 450]
                    [height 400]))
 
@@ -42,7 +41,7 @@
 
 
 ; slider para las columnas
-(define columnas_TF (new slider%
+(define columnas_4line (new slider%
                     (label "Columnas")
                     (parent frame)
                     (min-value 8)
@@ -50,83 +49,77 @@
                     (init-value 11)))
 
 ; slider para las filas
-(define filas_TF (new slider%
+(define filas_4line (new slider%
                     (label "Filas")
                     (parent frame)
                     (min-value 8)
                     (max-value 16)
                     (init-value 11)))
-; Mensaje para indicar al jugador que se le pide en los text fields
-(new message% [parent frame][label "            Color deseado:\n [1: Diamante] [2: Cobre] [3: Zafiro]"])
 
+; Mensaje para indicar al jugador que se le pide en los text fields
+(new message% [parent frame][label "                Color deseado:\n          [1: Azul] [2: Rojo] [3: Celste] [4: verde]"])
 (define color_SL (new slider%
                     (label "Eleccion:")
                     (parent frame)
                     (min-value 1)
-                    (max-value 3)
+                    (max-value 4)
                     (init-value 2)))
 
-(define imagen (cond [(= (send color_SL get-value) 1) "diamante.jpg"]
-                     [(= (send color_SL get-value) 2) "cobre.jpg"]
-                     [(= (send color_SL get-value) 3) "zafiro.jpg"]))
+;colores a escoger por el jugador
+(define (actualizar_imagen)
+        (cond [(= (send color_SL get-value) 1) "azul.jpg"]
+              [(= (send color_SL get-value) 2) "rojo.jpg"]
+              [(= (send color_SL get-value) 3) "celeste.jpg"]
+              [(= (send color_SL get-value) 4) "verde.jpg"]))
+
+
+(define info-btn (new button%
+                   (parent frame)
+                   (label "Manual Rapido")
+                   ;[min-width 50]
+                   ;[min-height 50]
+                   (callback (lambda (button event)
+                               (send info-frame show #t)))))
+
+(define info-frame (new frame% [label "Información Basica del juego"]
+                               [width 300]
+                               [height 50]))
+
+
+(define info-msg (new message% [parent info-frame] [label "Este es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto."]))
+
+
+;(Botón para salir del menu rapido)
+(new button% [parent info-frame]
+             [label "Salir"]
+            [callback (lambda (button event)
+                        (send info-frame show #f)
+                         (send frame show #t))])
 
 
 
-;(define info-btn (new button%
- ;                  (parent frame)
-  ;                 (label "Manual Rapido\n")
-   ;                [min-width 50]
-    ;               [min-height 50]
-     ;              (callback (lambda (button event)
-      ;                         (send info-frame show #t)))))
-
-;(define info-frame (new frame% [label "Información Basica del juego"]
- ;                              [width 400]
-  ;                             [height 100]))
-
-
-;(define info-msg (new message% [parent info-frame] [label "Este es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto\nEste es mi párrafo de texto."]))
 
 
 
 
-; Botón para salir del menu rapido
-;(new button% [parent info-frame]
- ;            [label "Salir"]
-  ;           [callback (lambda (button event)
- ;                        (send info-frame show #f)
-   ;                      (send frame show #t))])
-;
-
-
-
-
-
-
-; Botón para crear el tablero e iniciar el juego
-; Botón para crear el tablero e iniciar el juego
+;Boton con las caracteristicas para el incio del juego
 (new button% [parent frame]
-             [label "Iniciar"]
-             ; Callback procedure for a button click:
-             [callback (lambda (button event)
-                (cond
-                  [(< (send columnas_TF get-value) 8) (new message% [parent frame][label "La cantidad de columnas debe ser mínimo 8"])]
-                  [(< (send filas_TF get-value) 8)  (new message%[parent frame][label "La cantidad de filas debe ser mínimo 8"])]
-                  [(> (send filas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de filas debe ser máximo 16"])]
-                  [(> (send columnas_TF get-value) 16)  (new message%[parent frame][label "La cantidad de columnas debe ser máximo 16"])]
-                  ((and (not (false? (generateMatrx (send columnas_TF get-value) (send filas_TF get-value)))) (not gameStart))
-                   ; Preguntar al usuario qué color desea
-                   
-                   (crear_botones_columnas (send columnas_TF get-value) 0)
-                   (asignar_matriz (generateMatrx (send filas_TF get-value) (send columnas_TF get-value)))
-                   (crear_matriz_interfaz (car matrix))
-                   (asignar_gameStart #t))
-                  (else
-                   (writeln #f))))])
+     [label "Iniciar"]
+     [callback (lambda (button event)
+                 (if (and (>= (send columnas_4line get-value) 8) (>= (send filas_4line get-value) 8) (<= (send filas_4line get-value) 16) (<= (send columnas_4line get-value) 16) (not gameStart) (not (false? (generateMatrx (send columnas_4line get-value) (send filas_4line get-value)))))
+                     (begin
+                       (crear_boton1 (send columnas_4line get-value) 0)
+                       (asignar_matriz (generateMatrx (send filas_4line get-value) (send columnas_4line get-value)))
+                       (interfaz_matrix (car matrix))
+                       ;juego es True
+                       (asignar_gameStart #t))
+                     (begin
+                       ;Juego es False
+                       (writeln #f))))])
 
 
 ;Definir el área de los botones de interfaz
-(define panel_botones(new horizontal-panel%	 
+(define lugar_boton(new horizontal-panel%	 
    	 	[parent frame]	 
                 [style '(border)]
                 [alignment '(left top)]
@@ -143,8 +136,8 @@
 
 
 
-;Dialog box cuando el jugador gana
-(define wonWindow (new dialog% [label "Ganaste"]
+;mensaje cuando el jugador gana
+(define ventana_win (new dialog% [label "Ganaste"]
                        [parent frame]
                        [width 300]	 
 
@@ -152,14 +145,14 @@
 )
 
 ; Función para mostrar la ventana que ganó
-(define (showWonWindow)
+(define (ventana_gane)
   
-   (send wonWindow show #t)
+   (send ventana_win show #t)
   
  )
 
 ;Dialog box cuando el jugador gana
-(define lossWindow (new dialog% [label "Perdiste"]
+(define ventana_loss (new dialog% [label "Perdiste"]
                        [parent frame]
                        [width 300]	 
 
@@ -167,13 +160,13 @@
 )
 
 ; Función para mostrar la ventana que ganó
-(define (showLossWindow)
+(define (ventana_pierde)
   
-   (send lossWindow show #t)
+   (send ventana_loss show #t)
   
  )
 
-;Dialog box cuando el jugador gana
+;mensaje de empate al usuario
 (define tieWindow (new dialog% [label "Empate"]
                        [parent frame]
                        [width 300]	 
@@ -182,124 +175,129 @@
 )
 
 ; Función para mostrar la ventana que ganó
-(define (showTieWindow)
+(define (vetana_n)
   
    (send tieWindow show #t)
   
  )
 
-;Funcion que realiza la conexion con el algoritmo codicioso. Retorna un numero de columna donde colocar la ficha
-(define(colPC)
-  (cadr (greedybegin (reverse (car matrix)) (length (car matrix)) (length (caar matrix)) 0 0)))
-   
+(define (IA_pc)
+;; Se asume que la variable "matrix" está definida y contiene una matriz válida
+  (cadr (greedybegin (reverse (car matrix)) ;; Se invierte la fila para que la PC empiece desde la última columna
+                     (length (car matrix)) ;; Se obtiene el ancho de la matriz
+                     (length (car matrix)) ;; Se obtiene el alto de la matriz
+                     0 0))) ;; Los últimos dos argumentos son las coordenadas de inicio para la búsqueda (en este caso, 0,0)
 
-;Funcion que usa el retorno de colPC para mostrar la jugada de la PC
-(define(playPC)
-  (cond
-    ((equal? (play 2 (colPC) (car matrix)) 1) (showWonWindow))
-    ((equal? (play 2 (colPC) (car matrix)) 2) (showLossWindow))
-    ((equal? (play 2 (colPC) (car matrix)) 0) (showTieWindow))
-    (else
-     (printf "turno pc\n")
-     (writeln (play 2 (colPC) (car matrix)))
-     (define candidatos (candi  matrix))
-     (asignar_matriz (play 2 (colPC) (car matrix)))
-     (refrescar_tablero)
-     (crear_matriz_interfaz (car matrix))
-)))
+;;Función que utiliza el retorno de la IA para mostrar la jugada de la PC
+(define (juega_IA_pc)
+  (let ((col (IA_pc))) ;; Se obtiene la columna elegida por la PC
+    (case (play 2 col (car matrix))
+      ((1) (ventana_gane)) ;; Si la PC gana, se muestra una ventana indicándolo
+      ((2) (ventana_pierde)) ;; Si la PC pierde, se muestra una ventana indicándolo
+      ((0) (tieWindow)) ;; Si hay empate, se muestra una ventana indicándolo
+      (else
+;; Si se sigue jugando, se muestran algunas cosas en la consola y se actualiza la matriz y el tablero gráfico
+       (printf "Turno de la PC\n")
+       (writeln (play 2 col (car matrix))) ;; Se muestra en la consola la matriz resultante de la jugada de la PC
+       (define candidatos (candi matrix)) ;; Se obtienen las posibles jugadas del jugador humano
+       (asignar_matriz (play 2 col (car matrix))) ;; Se actualiza la matriz principal con la jugada de la PC
+       (actualizacion_tablero) ;; Se actualiza el tablero gráfico con la matriz principal actualizada
+       (interfaz_matrix (car matrix)) ;; Se crea una nueva matriz para el tablero gráfico y se actualiza
+       ))))
 
 ; Hace el espacio que representa fichas dependiendo del numero que toque (0 es vacío, 1 es ficha jugador, 2 ficha máquina)
 
 (define (crear_espacio num panelx)
-  (let ()
-    (cond
-      [(= num 0)
-       (new message% [parent panelx]
-            [label (read-bitmap "plata.jpg" )])]
-      [(= num 1)
-       (new message% [parent panelx]
-            [label (read-bitmap imagen)])]
-      [(= num 2)
-       (new message% [parent panelx]
-            [label (read-bitmap "rosa.jpg" )])])))
+  (let ((imagen_eleccion (actualizar_imagen)))
+    (cond [(= num 0)
+           (new message% [parent panelx]
+                [label (read-bitmap "plata.jpg" )])]
+          [(= num 1)           (new message% [parent panelx]
+                [label (read-bitmap imagen_eleccion)])]
+          [(= num 2)           (new message% [parent panelx]
+                [label (read-bitmap "rosa (1).jpg" )])])))
 
-  
 
 
 ;Crea un widget que representa una fila de la matriz en la interfaz
-(define (crear_fila_mat_widget)
+(define (widget_fil)
    (new horizontal-panel%	 
    	 	[parent panel]	 
                 [style '(border)]
                 [alignment '(left top)]))
 
 ;Logica crear fila matriz interfaz
-(define (crear_fila_matriz_interfaz fila widget)
+(define (fila_matriz fila widget)
   (cond
     ((null? fila ) 1)
     (else
      (crear_espacio (car fila) widget)
-     (crear_fila_matriz_interfaz (cdr fila) widget))))
+     (fila_matriz (cdr fila) widget))))
 
-; Esta función se encarga de crear toda la matriz en la interfaz
-;Logica crear matriz interfaz
 
-(define(crear_matriz_interfaz matriz)
+
+; Matriz en interfaz
+
+(define (interfaz_matrix matriz)
+  ; Comprueba si la matriz es nula
   (cond
-    ((null? matriz ) 1)
-    ((not(list? matriz)) #t) 
+    ((null? matriz) 1)
+    ; Comprueba si la matriz no es una lista
+    ((not (list? matriz)) #t)
     (else
-     (crear_fila_matriz_interfaz (car matriz) (crear_fila_mat_widget))
-     (crear_matriz_interfaz (cdr matriz)))))
+     ; Crea una fila de la matriz en la interfaz utilizando la función fila_matriz y widget_fil
+     (fila_matriz (car matriz) (widget_fil))
+     ; Llama recursivamente a interfaz_matrix para crear las filas restantes de la matriz en la interfaz
+     (interfaz_matrix (cdr matriz)))))
 
-;Función que crea n botones para las columnas del juego en la interfaz
 
-(define (crear_botones_columnas num cont)
+
+
+
+;FBotones de la interfaz
+
+(define (crear_boton1 num cont)
   (cond
-    ((number? num)
-     (cond
-       ((= num 0) 1)
-       (else
-        (crear_boton cont )
-        (crear_botones_columnas (- num 1) (+ cont 1)))))))
+    ((<= num 0) 1)
+    (else
+      (crear_boton cont)
+      (crear_boton1 (- num 1) (+ cont 1)))))
 
 
 ;Función que reinicia el tablero de juego en la interfaz, cada vez que se hace un movimiento
 
-(define (refrescar_tablero)
+(define (actualizacion_tablero)
     (send frame delete-child panel)
      (set! panel (new vertical-panel%	 
    	 	[parent frame]	 
                 [style '(border)]
-                [alignment '(left top)]
-   	 )
-
-     )
-)
+                [alignment '(left top)])))
 
 ; ||============= Funciones que afectan la interfaz  ==========||
 
-; Hace un botón para tirar una ficha en el juego
-(define (crear_boton col)
-  (new button% [parent panel_botones]
-             [label (number->string col)]
-             [horiz-margin 1]
+(define (crear_boton pilar)
+  (new button% [parent lugar_boton]   ; Se crea un nuevo botón en el panel "lugar_boton"
+             [label (number->string pilar)]   ; Se asigna un label al botón con el valor de "pilar" convertido a string
+             [horiz-margin 1]   ; Se asigna un margen horizontal de 1
              ; Callback procedure for a button click:
-             [callback (lambda (button event)
-                         (printf "turno jug\n")
-                         (writeln (play 1 col (car matrix)))
+             [callback (lambda (button event)   ; Se crea un procedimiento de callback para el evento click del botón
+                         (printf "turno jug\n")   ; Se imprime un mensaje en la consola
+                         (writeln (play 1 pilar (car matrix)))   ; Se llama a la función "play" con los argumentos 1, "col" y el primer elemento de "matrix". El resultado se imprime en la consola
                          (cond
                            ;Si la función jugar devuelve un string es que el jugador ya ganó
-                           ((equal? (play 1 col (car matrix)) 1) (showWonWindow))
-                           ;;((equal? (play 1 col (car matrix)) 2) (showLossWindow))
-                           ((equal? (play 1 col (car matrix)) 0) (showTieWindow))
-                           ((equal? (play 1 col (car matrix)) (car matrix)) (send button enable #f))
+                           ((equal? (play 1 pilar (car matrix)) 1) (ventana_gane))   ; Si el resultado de "play" es igual a 1, se llama a la función "ventana_gane"
+                           ((equal? (play 1 pilar (car matrix)) 2) (ventana_pierde))   ; Si el resultado de "play" es igual a 2, se llama a la función "ventana_pierde"
+                           ((equal? (play 1 pilar (car matrix)) 0) (tieWindow))   ; Si el resultado de "play" es igual a 0, se llama a la función "tieWindow"
+                           
+                           ((equal? (play 1 pilar (car matrix)) (car matrix)) (send button enable #f))   ; Si el resultado de "play" es igual al primer elemento de "matrix", se deshabilita el botón
                            (else
-                            (asignar_matriz (play 1 col (car matrix)))
-                            (refrescar_tablero)
-                            (crear_matriz_interfaz (car matrix))
-                            (playPC)
-                            )))]))
+                            (asignar_matriz (play 1 pilar (car matrix)))   ; Se llama a la función "asignar_matriz" con los argumentos 1, "col" y el primer elemento de "matrix"
+                            (actualizacion_tablero)   ; Se llama a la función "actualizacion_tablero"
+                            (interfaz_matrix (car matrix))   ; Se llama a la función "interfaz_matrix" con el primer elemento de "matrix"
+                            (juega_IA_pc)   ; Se llama a la función "juega_IA_pc"
+                            )))]))   
+
+(send frame show #t)   ; Se muestra el frame
+
          
 
-(send frame show #t)
