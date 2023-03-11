@@ -5,17 +5,21 @@
 (provide objetivo)
 
 
-#|========================FUNCIONES DE TRATAMIENTO DE LISTAS=================================|#
+;#Manejador de listas#
 
 
-;;Función que revisa si es posible colocar una ficha
+;Esta función toma una lista como argumento y devuelve verdadero si aún hay espacio para jugar
+;(es decir, si aún hay un cero en la lista) y falso en caso contrario. Si la lista está vacía,
+;la función devuelve falso.
 (define (posible? lst)
   (cond
     ((null? lst) #f) ;;Falso si no hay posibilidad de jugar
     ((equal? (car lst) 0) #t) ;;True si aún hay campo para jugar
     (else (posible? (cdr lst)))))
 
-;;Función que verifica si un valor existe en una fila
+
+;;Esta función toma un valor y una lista como argumentos y devuelve verdadero si el valor se
+;encuentra en la lista y falso en caso contrario.
 (define (exist? value list)
   (cond ((null? list) ;;Falso si no existe
          #f)
@@ -24,31 +28,38 @@
         (else
          (exist? value (cdr list)))))
 
-;;Función que genera la matriz del juego llena de ceros 
+
+;;Esta función toma dos argumentos, m y n, y devuelve una matriz (una lista de listas) de tamaño m x n,
+; llena de ceros. Si los argumentos no corresponden a un tamaño válido, la función devuelve falso.
 (define (generarMatriz m n)
   (cond
     ((tamano? m n) (generarMatriz_aux m n))
     (else #f)))
 
-;;Función que cuenta el largo de una lista
+
+;;Esta función toma una lista como argumento y devuelve la longitud de la lista.
 (define (largo lst)
   (cond
     ((null? lst) 0)
     (else (+ 1 (largo (cdr lst))))))
 
-;;Función que realiza una función en cada elemento de una lista
+;;Esta función toma una función y una lista como argumentos y devuelve una lista que resulta de aplicar
+; la función a cada elemento de la lista original.
 (define (aplicar-f func lista)
   (cond
     ((null? lista) null)
     (else (cons (func (car lista)) (aplicar-f func (cdr lista))))))
 
-;;Función que retorna la transpuesta de una matriz
+;;Esta función toma una matriz (una lista de listas) como argumento y devuelve la transpuesta de la matriz
+;(es decir, una matriz en la que las filas y columnas están intercambiadas).
 (define (transpuesta matrx)
   (cond
     ((null? (car matrx)) '()) 
     (else (cons (aplicar-f car matrx) (transpuesta (aplicar-f cdr matrx))))))
 
-;;Función que coloca la ficha del jugador en la columna
+;;Esta función toma una columna (una lista) y un jugador (un número) como argumentos, y devuelve la columna
+; con la ficha del jugador colocada en la posición más baja posible. Si la columna ya está llena, la función
+; no coloca ninguna ficha.
 (define (colocarFicha column player)
   (cond
     ((null? (car column)) '())
@@ -56,53 +67,76 @@
     ((not (equal? (cadr column) 0)) (cons player (cdr column)))
     (else (cons (car column) (colocarFicha (cdr column) player)))))
 
-#|======================FUNCIONES DE VERIFICACIONES GENERALES==============================|#
 
+
+;#VERIFICACION DEL JUEGO#
+
+;función auxiliar que verifica si una matriz está llena. Recibe una matriz y verifica si todas las columnas
+;están llenas, retorna verdadero si están llenas y falso si no lo están.
 (define (llena_aux matrx)
   (cond
     ((null? matrx) #t) ;;True si esta llena
     ((posible? (car matrx)) #f) ;;Falso si no esta llena
     (else (llena_aux (cdr matrx)))))
 
-;;Función que verifica si la matriz del juego esta llena
+
+;; función que verifica si la matriz del juego está llena. Recibe la matriz del juego y utiliza la función
+;auxiliar llena_aux para determinar si la matriz está llena.
 (define (llena? matrx)
   (cond
     ((and (list? matrx) (list? (car matrx))) (llena_aux matrx))))
 
-;;Funcion que valida si el numero de filas y columnas esta en el rango
+
+;;función que valida si el número de filas y columnas está en el rango permitido para el juego.
+; Recibe dos números enteros que representan el número de filas y columnas, respectivamente, y
+;devuelve verdadero si están en el rango permitido y falso si no lo están.
 (define (tamano? rows col)
   (cond
     ((and (>= rows 8) (<= rows 16) (>= col 8) (<= col 16)) #t)
     (else #f)))
 
-;;Función que crea las filas de la matriz con el numero de columnas dado
+;;función que crea las filas de una matriz con un número de columnas dado. Recibe el número de
+;columnas que tendrá la fila y crea una lista con ceros con esa cantidad de elementos.
 (define (crearFilas col_number)
   (cond
     ((zero? col_number) null)
     (else (cons 0 (crearFilas (- col_number 1))))))
 
+;función auxiliar que crea una matriz con un número de filas y columnas dados, utilizando la función crearFilas.
+; Recibe el número de filas y columnas que tendrá la matriz y devuelve la matriz creada.
 (define (generarMatriz_aux m n)
   (cond
     ((zero? m) null)
     (else (cons (crearFilas n) (generarMatriz_aux (- m 1) n)))))
 
+
+;;función auxiliar que busca un elemento en una lista por su índice. Recibe el índice del elemento que se desea buscar,
+;la lista en la que se realizará la búsqueda y un contador que lleva la posición actual en la lista, y devuelve el
+;elemento correspondiente al índice buscado.
 (define (buscarEle_aux index lst cont)
   (cond
     ((null? lst) #f) ;;Falso si no encuentra el índice
     ((equal? index cont) (car lst)) ;;La posicion donde esta el elemento cuando llega al índice
     (else (buscarEle_aux index (cdr lst) (+ cont 1)))))
 
-;;Función que obtiene el elemento en ese índice
+;;función que busca un elemento en una lista por su índice. Recibe el índice del elemento que se desea buscar
+;y la lista en la que se realizará la búsqueda, y utiliza la función buscarEle_aux para realizar la búsqueda.
 (define (buscarEle index lst)
   (buscarEle_aux index lst 0))
 
+; función auxiliar que verifica si una columna de una matriz está llena. Recibe el número de la columna que se
+;desea verificar, la matriz en la que se realizará la verificación y un contador que lleva la posición actual
+;en la lista, y devuelve verdadero si la columna está llena y falso si no lo está.
 (define (columnaLlena_aux colNum matrx cont)
   (cond
     ((null? matrx) #f) ;;Falso si la columna no está llena
     ((equal? cont colNum) (not (posible? (car matrx)))) ;;True si está llena
     (else (columnaLlena_aux colNum (cdr matrx) (+ cont 1)))))
 
-;;Función que verifica si una columna está llena
+;;función que verifica si una columna de una matriz está llena. Recibe el número de la columna que se desea
+;verificar y la matriz en la que se realizará la verificación, y utiliza la función columnaLlena_aux para
+;realizar la verificación. También utiliza la función transpuesta para convertir la matriz en su transpuesta
+;y verificar la columna correspondiente.
 (define (columnaLlena? colNum matrx)
   (columnaLlena_aux colNum (transpuesta matrx) 0))
 
